@@ -961,11 +961,17 @@ function! s:RequestSemanticCompletion()
   endif
 
   if get( b:, 'ycm_completing' )
-    let s:force_semantic = 1
     if s:completion_api == s:COMPLETION_TEXTCHANGEDP
       call s:StopPoller( s:pollers.completion )
     endif
-    py3 ycm_state.SendCompletionRequest( True )
+    if !s:InsideCommentOrString() &&
+        \ !s:OnBlankLine()
+        let s:force_semantic = 1
+        py3 ycm_state.SendCompletionRequest( True )
+    else
+        let s:force_semantic = 0
+        py3 ycm_state.SendCompletionRequest( False )
+    endif
 
     if s:completion_api == s:COMPLETION_TEXTCHANGEDP &&
           \ py3eval( 'ycm_state.CompletionRequestReady()' )
@@ -989,7 +995,6 @@ function! s:RequestSemanticCompletion()
   " insert anything so we return an empty string.
   return ''
 endfunction
-
 
 function! s:PollCompletion( ... )
   if !py3eval( 'ycm_state.CompletionRequestReady()' )
