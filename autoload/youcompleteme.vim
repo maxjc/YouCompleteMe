@@ -314,7 +314,7 @@ function! s:SetUpKeyMappings()
     endif
 
     silent! exe 'inoremap <unique> <silent> ' . invoke_key .
-          \ ' <C-R>=<SID>InvokeSemanticCompletion()<CR>'
+          \ ' <C-R>=<SID>ManualComplete()<CR>'
   endif
 
   if !empty( g:ycm_key_detailed_diagnostics )
@@ -826,20 +826,16 @@ function! s:OnBlankLine()
   return s:Pyeval( 'not vim.current.line or vim.current.line.isspace()' )
 endfunction
 
-
-function! s:InvokeCompletion()
-  exec s:python_command "ycm_state.SendCompletionRequest(" .
-        \ "vimsupport.GetBoolValue( 's:force_semantic' ) )"
-
-  call s:PollCompletion()
-endfunction
-
-
-function! s:InvokeSemanticCompletion()
+function! s:ManualComplete()
   if &completefunc == "youcompleteme#CompleteFunc"
-    let s:force_semantic = 1
-    exec s:python_command "ycm_state.SendCompletionRequest( True )"
-
+    if !s:InsideCommentOrString() &&
+        \ !s:OnBlankLine()
+        let s:force_semantic = 1
+        exec s:python_command "ycm_state.SendCompletionRequest( True )"
+    else
+        let s:force_semantic = 0
+        exec s:python_command "ycm_state.SendCompletionRequest( False )"
+    endif
     call s:PollCompletion()
   endif
 
@@ -847,6 +843,13 @@ function! s:InvokeSemanticCompletion()
   " <C-R>=, its return value is inserted (see :h c_CTRL-R_=). We don't want to
   " insert anything so we return an empty string.
   return ''
+endfunction
+
+function! s:InvokeCompletion()
+  exec s:python_command "ycm_state.SendCompletionRequest(" .
+        \ "vimsupport.GetBoolValue( 's:force_semantic' ) )"
+
+  call s:PollCompletion()
 endfunction
 
 
