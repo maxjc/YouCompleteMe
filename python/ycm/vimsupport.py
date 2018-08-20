@@ -402,6 +402,10 @@ def ConvertDiagnosticsToQfList( diagnostics ):
     location = diagnostic[ 'location' ]
     line_num = location[ 'line_num' ]
 
+    # Deliberately ignore anything that does not concern the current file
+    if location[ 'filepath' ] != GetBufferFilepath(vim.current.buffer):
+        return None
+
     # libclang can give us diagnostics that point "outside" the file; Vim borks
     # on these.
     if line_num < 1:
@@ -421,7 +425,12 @@ def ConvertDiagnosticsToQfList( diagnostics ):
       'valid' : 1
     }
 
-  return [ ConvertDiagnosticToQfFormat( x ) for x in diagnostics ]
+  retlist = []
+  for x in diagnostics:
+      diagnostic_line = ConvertDiagnosticToQfFormat ( x )
+      if diagnostic_line is not None:
+          retlist.append(diagnostic_line)
+  return retlist
 
 
 def GetVimGlobalsKeys():
