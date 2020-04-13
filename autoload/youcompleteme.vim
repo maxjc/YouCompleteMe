@@ -279,7 +279,7 @@ function! s:SetUpKeyMappings()
     endif
 
     silent! exe 'inoremap <unique> <silent> ' . invoke_key .
-          \ ' <C-R>=<SID>RequestSemanticCompletion()<CR>'
+          \ ' <C-R>=<SID>ManualComplete()<CR>'
   endif
 
   if !empty( g:ycm_key_detailed_diagnostics )
@@ -838,11 +838,16 @@ function! s:RequestCompletion()
 endfunction
 
 
-function! s:RequestSemanticCompletion()
+function! s:ManualComplete()
   if &completefunc == "youcompleteme#CompleteFunc"
-    let s:force_semantic = 1
-    py3 ycm_state.SendCompletionRequest( True )
-
+    if !s:InsideCommentOrString() &&
+        \ !s:OnBlankLine()
+        let s:force_semantic = 1
+        py3 ycm_state.SendCompletionRequest( True )
+    else
+        let s:force_semantic = 0
+        py3 ycm_state.SendCompletionRequest( False )
+    endif
     call s:PollCompletion()
   endif
 
