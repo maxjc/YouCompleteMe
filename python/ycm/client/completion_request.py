@@ -188,6 +188,11 @@ def ConvertCompletionDataToVimData( completion_data ):
   extra_menu_info = completion_data.get( 'extra_menu_info', '' )
   preview_info = _GetCompletionInfoField( completion_data )
 
+  if extra_menu_info.startswith('\n'):
+    extra_menu_info = extra_menu_info.replace('\n', '@')
+  else:
+    extra_menu_info = extra_menu_info.replace('\n', ' @')
+
   # When we are using a popup for the preview_info, it needs to fit on the
   # screen alongside the extra_menu_info. Let's use some heuristics.  If the
   # length of the extra_menu_info is more than, say, 1/3 of screen, truncate it
