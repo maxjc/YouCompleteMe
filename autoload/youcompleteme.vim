@@ -990,9 +990,16 @@ function! s:RequestSemanticCompletion()
   endif
 
   if get( b:, 'ycm_completing' )
-    let s:force_semantic = 1
     call s:StopPoller( s:pollers.completion )
-    py3 ycm_state.SendCompletionRequest( True )
+
+    if !s:InsideCommentOrString() &&
+        \ !s:OnBlankLine()
+        let s:force_semantic = 1
+        py3 ycm_state.SendCompletionRequest( True )
+    else
+        let s:force_semantic = 0
+        py3 ycm_state.SendCompletionRequest( False )
+    endif
 
     if py3eval( 'ycm_state.CompletionRequestReady()' )
       " We can't call complete() syncrhounsouly in the TextChangedI/TextChangedP
